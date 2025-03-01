@@ -1,65 +1,60 @@
-import os  # Импортируем модуль os
-
-# Получаем API-ключи из переменных окружения
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-TELEGRAM_API_TOKEN = os.getenv("TELEGRAM_API_TOKEN")
-
+import os
 import logging
-import openai
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram.ext import Application, MessageHandler, filters, CallbackContext
+import openai
 
-# 🔑 Вставь свой API-ключ OpenAI
+# Логирование (для отладки)
+logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
+
+# Получаем токены из переменных окружения
+TELEGRAM_API_TOKEN = os.getenv("TELEGRAM_API_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# 🔑 Вставь свой API-ключ Telegram
-TELEGRAM_API_TOKEN = "8076484956:AAFpgyQi_H-uRFo0Oni3Czaox2fdKq2g9UQ"
+# Словарь для хранения обработанных update_id
+processed_updates = set()
 
-# Настраиваем OpenAI API
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
+async def handle_message(update: Update, context: CallbackContext) -> None:
+    """Обрабатываем входящее сообщение"""
+    message = update.message.text
+    chat_id = update.message.chat_id
 
-# Логирование
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-logger = logging.getLogger(__name__)
+    # Проверяем, если update_id уже обработан – игнорируем
+    if update.update_id in processed_updates:
+        logging.info(f"Пропускаем дубликат update_id: {update.update_id}")
+        return
+    processed_updates.add(update.update_id)  # Добавляем обработанный update_id
 
-# Команда /start
-async def start(update: Update, context):
-    await update.message.reply_text("Привет! 😊 Я ChatGPT-бот. Спроси меня о чем угодно!")
-
-# Генерация ответа через OpenAI (ChatGPT)
-async def generate_response(update: Update, context):
-    user_message = update.message.text.strip()
+    logging.info(f"Получено сообщение: {message}")
 
     try:
-        print(f"Отправляю запрос в OpenAI: {user_message}")  # Отладка
-
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",  # Можно заменить на "gpt-4", если у тебя есть доступ
-            messages=[
-                {"role": "system", "content": "Ты дружелюбный и умный чат-бот. Отвечай кратко и понятно."},
-                {"role": "user", "content": user_message}
-            ],
-            temperature=0.7
-        )
-
-        bot_reply = response.choices[0].message.content.strip()
-        print(f"Ответ от OpenAI: {bot_reply}")  # Отладка
-
-        await update.message.reply_text(bot_reply)
-
+        response = get_chatgpt_response(message)  # Функция для запроса в OpenAI
+        await update.message.reply_text(response)
     except Exception as e:
-        logger.error(f"Ошибка OpenAI: {e}")
+        logging.error(f"Ошибка: {e}")
         await update.message.reply_text("Упс! Что-то пошло не так. Попробуй позже!")
 
-# Запуск бота
+def get_chatgpt_response(text):
+    """Отправляет запрос в OpenAI и возвращает ответ"""
+    try:
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": text}],
+            max_tokens=150
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        logging.error(f"Ошибка OpenAI: {e}")
+        return "Ошибка запроса к ChatGPT."
+
 def main():
+    """Запускаем бота"""
     application = Application.builder().token(TELEGRAM_API_TOKEN).build()
-
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, generate_response))
-
-    print("Бот запущен...")
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    
+    logging.info("Бот запущен...")
     application.run_polling()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
