@@ -4,14 +4,12 @@ from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, CallbackContext
 import openai
 
-# Логирование (для отладки)
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
 # Получаем токены из переменных окружения
 TELEGRAM_API_TOKEN = os.getenv("TELEGRAM_API_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# Словарь для хранения обработанных update_id
 processed_updates = set()
 
 async def handle_message(update: Update, context: CallbackContext) -> None:
@@ -19,16 +17,15 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
     message = update.message.text
     chat_id = update.message.chat_id
 
-    # Проверяем, если update_id уже обработан – игнорируем
     if update.update_id in processed_updates:
         logging.info(f"Пропускаем дубликат update_id: {update.update_id}")
         return
-    processed_updates.add(update.update_id)  # Добавляем обработанный update_id
+    processed_updates.add(update.update_id)
 
     logging.info(f"Получено сообщение: {message}")
 
     try:
-        response = get_chatgpt_response(message)  # Функция для запроса в OpenAI
+        response = get_chatgpt_response(message)
         await update.message.reply_text(response)
     except Exception as e:
         logging.error(f"Ошибка: {e}")
@@ -54,7 +51,7 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
     
     logging.info("Бот запущен...")
-    application.run_polling()
+    application.run_polling(drop_pending_updates=True)  # Добавили параметр для предотвращения конфликта
 
 if __name__ == "__main__":
     main()
