@@ -45,11 +45,19 @@ def get_chatgpt_response(text):
         logging.error(f"Ошибка OpenAI: {e}")
         return "Ошибка запроса к ChatGPT."
 
+async def error_handler(update: object, context: CallbackContext) -> None:
+    """Обрабатываем ошибки и логируем их"""
+    logging.error(f"Произошла ошибка: {context.error}")
+    if update and isinstance(update, Update):
+        await update.message.reply_text("Упс! Возникла ошибка, попробуйте позже.")
+
+
 def main():
     """Запускаем бота"""
     application = Application.builder().token(TELEGRAM_API_TOKEN).build()
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    
+    application.add_error_handler(error_handler)
+
     logging.info("Бот запущен...")
     application.run_polling(drop_pending_updates=True)  # Добавили параметр для предотвращения конфликта
 
