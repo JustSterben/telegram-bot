@@ -1,3 +1,9 @@
+import os  # Импортируем модуль os
+
+# Получаем API-ключи из переменных окружения
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+TELEGRAM_API_TOKEN = os.getenv("TELEGRAM_API_TOKEN")
+
 import logging
 import openai
 from telegram import Update
