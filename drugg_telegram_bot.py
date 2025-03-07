@@ -8,6 +8,9 @@ logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=lo
 
 # Получаем токены из переменных окружения
 TELEGRAM_API_TOKEN = os.getenv("TELEGRAM_API_TOKEN")
+
+if not TELEGRAM_API_TOKEN:
+    raise ValueError("Ошибка: Переменная TELEGRAM_API_TOKEN не задана!")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 processed_updates = set()
