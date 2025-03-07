@@ -11,6 +11,8 @@ TELEGRAM_API_TOKEN = os.getenv("TELEGRAM_API_TOKEN")
 
 if not TELEGRAM_API_TOKEN:
     raise ValueError("Ошибка: Переменная TELEGRAM_API_TOKEN не задана!")
+
+print(f"Загруженный токен: {TELEGRAM_API_TOKEN}")  # Проверяем в логах
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 processed_updates = set()
