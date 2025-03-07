@@ -7,7 +7,7 @@ import openai
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
 # Получаем токены из переменных окружения
-TELEGRAM_API_TOKEN = "8076484956:AAFpgyQi_H-uRFo0Oni3Czaox2fdKq2g9UQ"
+TELEGRAM_API_TOKEN = "7245416815:AAHoF27_RZ2CPtCgTs2gpj4S-SeCEOkh24Q"
 
 if not TELEGRAM_API_TOKEN:
     raise ValueError("Ошибка: Переменная TELEGRAM_API_TOKEN не задана!")
